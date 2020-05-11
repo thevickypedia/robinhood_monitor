@@ -1,4 +1,5 @@
-def stock_code():
+# List of share ids and their names saved as a dictionary so that the message can be better human readable
+def stock_id():
     share_code = {"GE": "39ff611b-84e7-425b-bfb8-6fe2a983fcf3",
                   "EXPE": "01422ebf-263c-4366-8104-816e2eafdd2b",
                   "ICAGY": "172df311-e968-4691-8f7b-018151c2cc45",
