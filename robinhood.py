@@ -10,9 +10,8 @@ p = os.getenv('pass')
 q = os.getenv('qr')
 
 if not u or not p or not q:
-    print(
-        "Check your env variables. It should be set as:\n\n'user=<login "
-        "email>'\n'pass=<password>'\n'qr=<qr_code>'")
+    print("Check your local environment variables. It should be set as:\n\n"
+          "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
     sys.exit()
 
 rh = Robinhood()
