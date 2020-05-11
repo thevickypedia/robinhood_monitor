@@ -1,15 +1,19 @@
 import os
-import time
+import sys
 
 from pyrh import Robinhood
-
 from lib.stock_code import stock_code
 
 u = os.getenv('user')
 p = os.getenv('pass')
+q = os.getenv('qr')
+
+if not u or not p or not q:
+    print("Check your env variables. It should be set as:\n\n'user=<login email>'\n'pass=<password>'\n'qr=<qr_code>'")
+    sys.exit()
 
 rh = Robinhood()
-rh.login(username=u, password=p, challenge_type='email')
+rh.login(username=u, password=p, qr_code=q)
 
 raw_result = (rh.positions())
 result = raw_result['results']
@@ -24,7 +28,6 @@ for data in result:
         if str(value) in share_id:
             share_name = key
             print(f'You bought {shares_count} shares of {share_name} at ${buy} per share')
-print()
 
 
 def account_user_id():
@@ -40,7 +43,4 @@ def portfolio_value():
 
 
 df = portfolio_value()
-while True:
-    print(f'The current value of all your shares in total is: {df}')
-    # loop gives 5 second interval
-    time.sleep(5)
+print(f'\nThe current value of all your shares in total is: ${df}')
