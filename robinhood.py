@@ -1,6 +1,7 @@
-import os
-import sys
 import math
+import os
+from pprint import pprint
+import sys
 
 from pyrh import Robinhood
 from lib.helper import stock_id
@@ -10,15 +11,13 @@ p = os.getenv('pass')
 q = os.getenv('qr')
 
 if not u or not p or not q:
-    print("Check your env variables. It should be set as:\n\n'user=<login email>'\n'pass=<password>'\n'qr=<qr_code>'")
+    print(
+        "Check your env variables. It should be set as:\n\n'user=<login "
+        "email>'\n'pass=<password>'\n'qr=<qr_code>'")
     sys.exit()
 
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
-
-raw_result = (rh.positions())
-result = raw_result['results']
-share_code = dict(stock_id())
 
 
 def account_user_id():
@@ -28,8 +27,10 @@ def account_user_id():
 
 
 acc_id = account_user_id()
-
-total_buy = []
+raw_result = (rh.positions())
+result = raw_result['results']
+share_code = dict(stock_id())
+shares_total = []
 print(f'Your portfolio ({acc_id}):\n')
 for data in result:
     share_id = str(data['instrument'].split('/')[-2])
@@ -39,12 +40,12 @@ for data in result:
         if str(value) in share_id:
             share_name = key
             total = round(int(shares_count) * float(buy), 2)
-            total_buy.append(total) # not used in this function
+            shares_total.append(total)  # not used in this function
             current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
             current_total = round(int(shares_count) * current, 2)
             difference = round(float(current_total - total), 2)
-            print(f'{shares_count} shares of {share_name} at ${buy} Currently: ${current}\nTotal bought: ${total} '
-                  f'Current Total: ${current_total}')
+            print(f'{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                  f'Total bought: ${total} Current Total: ${current_total}')
             if difference < 0:
                 print(f'LOST ${-difference} on {share_name}\n')
             else:
@@ -58,11 +59,11 @@ def portfolio_value():
     return current_value
 
 
-df = portfolio_value()
-print(f'Current value of your total investment is: ${df}')
-tot = round(math.fsum(total_buy), 2)
-print(f'Previous value of your total investment is: ${tot}')
-total_diff = round(float(df - tot), 2)
+net_worth = portfolio_value()
+print(f'Current value of your total investment is: ${net_worth}')
+total_buy = round(math.fsum(shares_total), 2)
+print(f'Previous value of your total investment is: ${total_buy}')
+total_diff = round(float(net_worth - total_buy), 2)
 if total_diff < 0:
     print(f'Lost ${total_diff}')
 else:
