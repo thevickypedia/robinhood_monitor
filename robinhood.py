@@ -1,6 +1,5 @@
 import math
 import os
-from pprint import pprint
 import sys
 
 from pyrh import Robinhood
