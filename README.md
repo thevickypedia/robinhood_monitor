@@ -14,9 +14,9 @@ Your stock viewer to check your portfolio from Robinhood
 
 <br>
 
-To use qr code authentication you must enable Two-Factor Authentication. Follow steps:
+To use [qr_code](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16) you must enable Two-Factor Authentication. Follow steps:
 * Login to your Robinhood Web App.
-* Go to Account -> Settings
+* Go to Account -> Settings or click [me](https://robinhood.com/account/settings)
 * Turn on Two-Factor Authentication.
 * Select “Authentication App”
 * Click “Can’t Scan It?”, and copy the 16-character QR code.
@@ -24,7 +24,8 @@ To use qr code authentication you must enable Two-Factor Authentication. Follow 
 <br>
 
 Alternatively you can also run this code without Two-Factor Authentication but it will require you to enter the Verification code each and every-time. To do this simply remove the qr_code part [here](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16)
+<br>
 You can also change the way you receive validation code from email to sms. To do this:
-* Set [challenge_type](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16)="sms"
+* Include challenge_type="sms" in your [login](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16)
 
 Click to learn more about [pyrh](https://pypi.org/project/pyrh/)
