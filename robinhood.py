@@ -35,8 +35,9 @@ for data in result:
     buy = round(float(data['average_buy_price']), 2)
     shares_count = data['quantity'].split('.')[0]
     for key, value in share_code.items():
-        if str(value) in share_id:
-            share_name = key
+        if str(value) == share_id:
+            share_name = key.split("|")[0]
+            share_full_name = key.split("|")[1]
             total = round(int(shares_count) * float(buy), 2)
             shares_total.append(total)  # not used in this function
             current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
@@ -45,9 +46,9 @@ for data in result:
             print(f'{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
                   f'Total bought: ${total} Current Total: ${current_total}')
             if difference < 0:
-                print(f'LOST ${-difference} on {share_name}\n')
+                print(f'LOST ${-difference} on {share_full_name}\n')
             else:
-                print(f'Gained ${difference} on {share_name}\n')
+                print(f'Gained ${difference} on {share_full_name}\n')
 
 
 def portfolio_value():
@@ -63,6 +64,6 @@ total_buy = round(math.fsum(shares_total), 2)
 print(f'Previous value of your total investment is: ${total_buy}')
 total_diff = round(float(net_worth - total_buy), 2)
 if total_diff < 0:
-    print(f'Lost ${total_diff}')
+    print(f'Total Loss: ${total_diff}')
 else:
-    print(f'Gained ${total_diff}')
+    print(f'Total Profit: ${total_diff}')
