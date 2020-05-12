@@ -20,7 +20,10 @@ if not u or not p or not q:
 
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
-if 'last_extended_hours_trade_price' in (rh.get_quote('EXPE')):
+
+if rh.get_quote('EXPE')['trading_halted'] is False:
+    print('Gathering your investment details...')
+else:
     print("I'm not supposed to run during after market hours in order to save $$. Please check for yourself.")
     sys.exit()
 
@@ -44,7 +47,9 @@ def watcher():
     result = raw_result['results']
     share_code = dict(stock_id())
     shares_total = []
-    output = f'Your portfolio ({acc_id}):\n'
+    port_msg = f'Your portfolio ({acc_id}):\n'
+    loss_output = 'Loss:'
+    profit_output = 'Profit:'
     for data in result:
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
@@ -58,23 +63,28 @@ def watcher():
                 current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
                 current_total = round(int(shares_count) * current, 2)
                 difference = round(float(current_total - total), 2)
-                output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                           f'Total bought: ${total} Current Total: ${current_total}')
                 if difference < 0:
-                    output += f'\nLOST ${-difference} on {share_full_name}\n'
+                    loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                    f'Total bought: ${total} Current Total: ${current_total}'
+                                    f'\nLOST ${-difference} on {share_full_name}\n')
                 else:
-                    output += f'\nGained ${difference} on {share_full_name}\n'
+                    profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                      f'Total bought: ${total} Current Total: ${current_total}'
+                                      f'\nGained ${difference} on {share_full_name}\n')
 
     net_worth = portfolio_value()
-    output += f'\nCurrent value of your total investment is: ${net_worth}'
+    output_ = f'\nCurrent value of your total investment is: ${net_worth}'
     total_buy = round(math.fsum(shares_total), 2)
-    output += f'\nPrevious value of your total investment is: ${total_buy}'
+    output_ += f'\nValue of your total investment while purchase is: ${total_buy}'
     total_diff = round(float(net_worth - total_buy), 2)
     if total_diff < 0:
-        output += f'\nOverall Loss: ${total_diff}'
+        output_ += f'\nOverall Loss: ${total_diff}'
     else:
-        output += f'\nOverall Profit: ${total_diff}'
-    return output
+        output_ += f'\nOverall Profit: ${total_diff}'
+    return port_msg, profit_output, loss_output, output_
+
+
+port_head, profit, loss, overall_result = watcher()
 
 
 def send_email():
@@ -91,7 +101,7 @@ def send_email():
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
     title = 'Robinhood Alert'
-    text = f'{watcher()}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    text = f'{overall_result}\n\n{port_head}\n{profit}\n\n{loss}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
     email = Emailer(sender, recipient, title, text)
     return email
 
@@ -108,7 +118,8 @@ def send_whatsapp(data, context):
         client = Client(sid, token)
         from_number = sender
         to_number = receiver
-        client.messages.create(body=f'{dt_string}\n\nRobinhood Notification\n\nCheck your email for summary',
+        client.messages.create(body=f'{dt_string}\nRobinhood Notification\n{overall_result}\n\nCheck your email for '
+                                    f'summary',
                                from_=from_number,
                                to=to_number)
     else:
@@ -117,4 +128,3 @@ def send_whatsapp(data, context):
 
 if __name__ == '__main__':
     send_whatsapp("data", "context")
-
