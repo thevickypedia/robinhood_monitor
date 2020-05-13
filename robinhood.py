@@ -21,11 +21,14 @@ if not u or not p or not q:
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
 
-if rh.get_quote('EXPE')['trading_halted'] is False:
+if rh.get_quote('EXPE')['last_extended_hours_trade_price'] is None:
     print('Gathering your investment details...')
 else:
     print("I'm not supposed to run during after market hours in order to save $$. Please check for yourself.")
     sys.exit()
+
+now = datetime.now()
+dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
 
 
 def account_user_id():
@@ -50,6 +53,8 @@ def watcher():
     port_msg = f'Your portfolio ({acc_id}):\n'
     loss_output = 'Loss:'
     profit_output = 'Profit:'
+    loss_total = []
+    profit_total = []
     for data in result:
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
@@ -67,11 +72,17 @@ def watcher():
                     loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
                                     f'Total bought: ${total} Current Total: ${current_total}'
                                     f'\nLOST ${-difference} on {share_full_name}\n')
+                    loss_total.append(-difference)
                 else:
                     profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
                                       f'Total bought: ${total} Current Total: ${current_total}'
                                       f'\nGained ${difference} on {share_full_name}\n')
+                    profit_total.append(difference)
 
+    lost = round(math.fsum(loss_total), 2)
+    gained = round(math.fsum(profit_total), 2)
+    port_msg += f'The below values will differ from overall profit/loss if shares were purchased ' \
+                f'with different price values.\nTotal Profit: ${gained}\nTotal Loss: ${lost}\n'
     net_worth = portfolio_value()
     output_ = f'\nCurrent value of your total investment is: ${net_worth}'
     total_buy = round(math.fsum(shares_total), 2)
@@ -100,8 +111,8 @@ def send_email():
                   f"\nFor more information check README.md in {git}"
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
-    title = 'Robinhood Alert'
-    text = f'{overall_result}\n\n{port_head}\n{profit}\n\n{loss}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    title = f'Robinhood Alert as of {dt_string}'
+    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
     email = Emailer(sender, recipient, title, text)
     return email
 
@@ -109,8 +120,6 @@ def send_email():
 # two arguments for the below functions as lambda passes event, context by default
 def send_whatsapp(data, context):
     if send_email():
-        now = datetime.now()
-        dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
         sid = os.getenv('SID')
         token = os.getenv('TOKEN')
         sender = f"whatsapp:{os.getenv('SEND')}"
