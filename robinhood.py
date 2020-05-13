@@ -3,12 +3,14 @@ import math
 import os
 import sys
 from datetime import datetime
+import time
 
 from pyrh import Robinhood
 from twilio.rest import Client
 from lib.emailer import Emailer
 from lib.helper import stock_id
 
+start_time = time.time()
 u = os.getenv('user')
 p = os.getenv('pass')
 q = os.getenv('qr')
@@ -64,7 +66,7 @@ def watcher():
                 share_name = key.split("|")[0]
                 share_full_name = key.split("|")[1]
                 total = round(int(shares_count) * float(buy), 2)
-                shares_total.append(total)  # not used in this function
+                shares_total.append(total)
                 current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
                 current_total = round(int(shares_count) * current, 2)
                 difference = round(float(current_total - total), 2)
@@ -137,3 +139,4 @@ def send_whatsapp(data, context):
 
 if __name__ == '__main__':
     send_whatsapp("data", "context")
+    print(f"Elapsed time: {round(float(time.time() - start_time), 2)} seconds")
