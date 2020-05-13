@@ -1,12 +1,12 @@
-import datetime
 import math
 import os
 import sys
-from datetime import datetime
 import time
+from datetime import datetime
 
 from pyrh import Robinhood
 from twilio.rest import Client
+
 from lib.emailer import Emailer
 from lib.helper import stock_id
 
