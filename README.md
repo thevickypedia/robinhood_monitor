@@ -12,7 +12,7 @@ Your stock viewer to check your portfolio from Robinhood
 * pass - Robinhood login password
 * qr - Robinhood qr code
 
-To use [qr_code](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16) you must enable Two-Factor Authentication. Follow steps:
+To use [qr_code](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L24) you must enable Two-Factor Authentication. Follow steps:
 * Login to your Robinhood Web App.
 * Go to Account -> Settings or click [me](https://robinhood.com/account/settings)
 * Turn on Two-Factor Authentication.
