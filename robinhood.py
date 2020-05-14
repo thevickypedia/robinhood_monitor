@@ -23,14 +23,11 @@ if not u or not p or not q:
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
 
-if rh.get_quote('EXPE')['last_extended_hours_trade_price'] is None:
-    print('Gathering your investment details...')
-else:
-    print("I'm not supposed to run during after market hours in order to save $$. Please check for yourself.")
-    sys.exit()
-
 now = datetime.now()
 dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
+
+print(dt_string)
+print('Gathering your investment details...')
 
 
 def account_user_id():
@@ -94,6 +91,9 @@ def watcher():
         output_ += f'\nOverall Loss: ${total_diff}'
     else:
         output_ += f'\nOverall Profit: ${total_diff}'
+    # # use this if you wish to have conditional emails/notifications
+    # final_output = f'{output_}\n\n{port_msg}\n{profit_output}\n{loss_output}'
+    # return final_output
     return port_msg, profit_output, loss_output, output_
 
 
@@ -103,8 +103,7 @@ port_head, profit, loss, overall_result = watcher()
 def send_email():
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
-    logs = 'https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#logStream:group=/aws/lambda' \
-           '/stock_hawk '
+    logs = 'https://us-west-2.console.aws.amazon.com/cloudwatch/home#logStream:group=/aws/lambda/robinhood'
     git = 'https://github.com/vignesh1793/robinhood_tracker'
     footer_text = "\n----------------------------------------------------------------" \
                   "----------------------------------------\n" \
@@ -113,8 +112,10 @@ def send_email():
                   f"\nFor more information check README.md in {git}"
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
-    title = f'Robinhood Alert as of {dt_string}'
+    title = f'Investment Summary as of {dt_string}'
     text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    # # use this if you wish to have conditional emails/notifications
+    # text = f'{watcher()}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
     email = Emailer(sender, recipient, title, text)
     return email
 
@@ -129,7 +130,7 @@ def send_whatsapp(data, context):
         client = Client(sid, token)
         from_number = sender
         to_number = receiver
-        client.messages.create(body=f'{dt_string}\nRobinhood Notification\n{overall_result}\n\nCheck your email for '
+        client.messages.create(body=f'{dt_string}\nRobinhood Report\n{overall_result}\n\nCheck your email for '
                                     f'summary',
                                from_=from_number,
                                to=to_number)
