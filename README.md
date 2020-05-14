@@ -19,8 +19,8 @@ To use [qr_code](https://github.com/vignesh1793/robinhood_tracker/blob/master/ro
 * Select “Authentication App”
 * Click “Can’t Scan It?”, and copy the 16-character QR code.
 
-Alternatively you can also run this code without Two-Factor Authentication but it will require you to enter the Verification code each and every-time. To do this simply remove the qr_code part [here](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16)
+Alternatively you can also run this code without Two-Factor Authentication but it will require you to enter the Verification code each and every-time. To do this simply remove the qr_code part [here](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L24)
 
-You can also change the way you receive validation code from email to sms by including challenge_type="sms" in your [login](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L16)
+You can also change the way you receive validation code from email to sms by including challenge_type="sms" in your [login](https://github.com/vignesh1793/robinhood_tracker/blob/master/robinhood.py#L24)
 
 Click to learn more about [pyrh](https://pypi.org/project/pyrh/)
