@@ -1,28 +1,40 @@
-# Stock Monitor
-Your stock viewer to check your portfolio from Robinhood
+## Note: 
+This sub folder contains scripts that run on lambda connecting to SSM. Using SSM connector, I got rid of local environment variables which improves secured storage.
 
 ## Setup
 
-1. git clone this repository
+##### Prerequisites:
+* Running a script on AWS without a deployment tool like jenkins, requires all the libraries/packages to be locally maintained. 
+* Use the [AWS.zip](https://github.com/vignesh1793/robinhood_tracker/tree/master/AWS_lambda_using_ssm/AWS.zip) file and use the same format if libraries had to be changed.
 
-2. Run this command in your terminal to install necessary packages<br/>cd robinhood_tracker/lib && pip3 install -r requirements.txt
+##### Quick tip:
+* pip install any package and cd to the location where it has installed.
+* cp -r "package name" in to copy the package to a different folder.
+* wrap everything together as a .zip file and upload it to AWS.
+* root file should be directly accessible within the .zip, so don't include any unnecessary additional sub-folders.
 
-2. Make sure you add the following env variables
-* user - Robinhood login email address
-* pass - Robinhood login password
-* qr - Robinhood qr code
+##### 1. Below are the parameters that has to be on your AWS SSM.
 
-To use [qr_code](https://github.com/vignesh1793/robinhood_tracker/blob/master/AWS_lambda_using_ssm/robinhood.py#L24) you must enable Two-Factor Authentication. Follow steps:
-* Login to your Robinhood Web App.
-* Go to Account -> Settings or click [me](https://robinhood.com/account/settings)
-* Turn on Two-Factor Authentication.
-* Select “Authentication App”
-* Click “Can’t Scan It?”, and copy the 16-character QR code.
+* Name = user; Value = Robinhood login email address
+* Name = pass; Value = Robinhood login password
+* Name = qr; Value = Robinhood MFA QR code (Check for steps in original [README.md](https://github.com/vignesh1793/robinhood_tracker/blob/master/README.md))
+* Name = ACCESS_KEY; Value = AWS login access key
+* Name = SECRET_KEY; Value = AWS secret key
+* Name = SENDER; Value = sender email address (verified via AWS SES)
+* Name = RECIPIENT; Value = receiver email address (verified via AWS SES)
+<br/><br/>Optional (If you'd like to setup whats app notifications else skip these, app will still run):
+* Name = SID; Value = S-ID from twilio
+* Name = TOKEN; Value = Token from twilio
+* Name = SEND; Value = sender whats app number (fromat - +1xxxxxxxxxx)
+* Name = RECEIVE; Value = receiver whats app number (fromat - +1xxxxxxxxxx)<br><br>
 
-Alternatively you can also run this code without Two-Factor Authentication but it will require you to enter the Verification code each and every-time. To do this simply remove the qr_code part [here](https://github.com/vignesh1793/robinhood_tracker/blob/master/AWS_lambda_using_ssm/robinhood.py#L24)
+##### 2. Setup lambda function and attach an IAM policy
 
-You can also change the way you receive validation code from email to sms by including challenge_type="sms" in your [login](https://github.com/vignesh1793/robinhood_tracker/blob/master/AWS_lambda_using_ssm/robinhood.py#L24)
+* Create a lambda function with the handler as robinhood.send_whatsapp (this will invoke the send_whats app function inside the robinhood.py file)
+* Create an IAM policy with read access to GetParameter and attached to the executing lambda function.
+* Once that is done, make sure to check your lambda function's permission to SSM.
+* Policy update time: ~5-10 minutes.
 
-Click to learn more about [pyrh](https://pypi.org/project/pyrh/)
-
-Note: This sub folder contains scripts that run on lambda connecting to SSM. Using SSM connector, I got rid of local environment variables which improves security.<br/>To implement it this way, an IAM policy has to be created with read access to GetParameter and attached to the executing lambda function.
+##### 3. If you like to setup a cron schedule:
+* Add trigger to your lambda function (Trigger name: CloudWatch Events/EventBridge)
+* Refer [aws docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html) for scheduling format.
