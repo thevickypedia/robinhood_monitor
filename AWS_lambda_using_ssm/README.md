@@ -5,7 +5,12 @@ This sub folder contains scripts that run on lambda connecting to SSM. Using SSM
 
 ##### Prerequisites:
 * Running a script on AWS without a deployment tool like jenkins, requires all the libraries/packages to be locally maintained. 
-* Use the [AWS.zip](https://github.com/vignesh1793/robinhood_tracker/tree/master/AWS_lambda_using_ssm/AWS.zip) file and use the same format if libraries had to be changed.
+* Refer [documentation](https://aws.amazon.com/premiumsupport/knowledge-center/build-python-lambda-deployment-package/) to begin setup.
+* Lambda handler or source file should always be in the root.
+* Use the following file structure.<br>
+——— src or .zip<br>
+——— ——— handler.py<br>
+——— some-sub-directory
 
 ##### Quick tip:
 * pip install any package and cd to the location where it has installed.
