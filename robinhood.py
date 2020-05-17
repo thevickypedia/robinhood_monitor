@@ -140,10 +140,10 @@ def send_whatsapp(data, context):
                                     f'summary',
                                from_=from_number,
                                to=to_number)
+        print(f"Script execution time: {round(float(time.time() - start_time), 2)} seconds")
     else:
         return None
 
 
 if __name__ == '__main__':
     send_whatsapp("data", "context")
-    print(f"Elapsed time: {round(float(time.time() - start_time), 2)} seconds")
