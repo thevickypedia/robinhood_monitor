@@ -1,4 +1,9 @@
-# List of share ids and their names saved as a dictionary so that the message can be better human readable
+# The sole purpose of this file is to create mapping with the share_id against the share name and full name of the
+# organization. By doing this the email will carry the organization name instead of the share_id value for instant
+# recognition. The share_name is included to get the share quote also.
+# Format "share_name|share_full_name": "share_id"
+
+
 def stock_id():
     share_code = {"GE|General Electric Company": "39ff611b-84e7-425b-bfb8-6fe2a983fcf3",
                   "EXPE|Expedia Group, Inc": "01422ebf-263c-4366-8104-816e2eafdd2b",

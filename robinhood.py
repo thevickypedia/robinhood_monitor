@@ -64,25 +64,45 @@ def watcher():
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
         shares_count = data['quantity'].split('.')[0]
-        for key, value in share_code.items():
-            if str(value) == share_id:
-                share_name = key.split("|")[0]
-                share_full_name = key.split("|")[1]
-                total = round(int(shares_count) * float(buy), 2)
-                shares_total.append(total)
-                current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
-                current_total = round(int(shares_count) * current, 2)
-                difference = round(float(current_total - total), 2)
-                if difference < 0:
-                    loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                                    f'Total bought: ${total} Current Total: ${current_total}'
-                                    f'\nLOST ${-difference} on {share_full_name}\n')
-                    loss_total.append(-difference)
-                else:
-                    profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                                      f'Total bought: ${total} Current Total: ${current_total}'
-                                      f'\nGained ${difference} on {share_full_name}\n')
-                    profit_total.append(difference)
+        if share_id in share_code.values():
+            for key, value in share_code.items():
+                if str(value) == share_id:
+                    share_name = key.split("|")[0]
+                    share_full_name = key.split("|")[1]
+                    total = round(int(shares_count) * float(buy), 2)
+                    shares_total.append(total)
+                    current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
+                    current_total = round(int(shares_count) * current, 2)
+                    difference = round(float(current_total - total), 2)
+                    if difference < 0:
+                        loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                        f'Total bought: ${total} Current Total: ${current_total}'
+                                        f'\nLOST ${-difference} on {share_full_name}\n')
+                        loss_total.append(-difference)
+                    else:
+                        profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                          f'Total bought: ${total} Current Total: ${current_total}'
+                                          f'\nGained ${difference} on {share_full_name}\n')
+                        profit_total.append(difference)
+        else:
+            share_name = share_id
+            total = round(int(shares_count) * float(buy), 2)
+            shares_total.append(total)
+            current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
+            current_total = round(int(shares_count) * current, 2)
+            difference = round(float(current_total - total), 2)
+            if difference < 0:
+                loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                f'Total bought: ${total} Current Total: ${current_total}'
+                                f'\nLOST ${-difference} on some new stock you bought\nConsider mapping the share id '
+                                'with the share name in the helper file\n')
+                loss_total.append(-difference)
+            else:
+                profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                                  f'Total bought: ${total} Current Total: ${current_total}'
+                                  f'\nGained ${difference} on some new stock you bought\nConsider mapping the share id '
+                                  'with the share name in the helper file\n')
+                profit_total.append(difference)
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
