@@ -112,7 +112,7 @@ def send_email():
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
     logs = 'https://us-west-2.console.aws.amazon.com/cloudwatch/home#logStream:group=/aws/lambda/robinhood'
-    git = 'https://github.com/vignesh1793/robinhood_tracker'
+    git = 'https://github.com/vignesh1793/stock_hawk'
     footer_text = "\n----------------------------------------------------------------" \
                   "----------------------------------------\n" \
                   "A report on the list shares you have purchased.\n" \
@@ -128,8 +128,7 @@ def send_email():
     return email
 
 
-# two arguments for the below functions as lambda passes event, context by default
-def send_whatsapp(data, context):
+def send_whatsapp():
     if send_email():
         sid = os.getenv('SID')
         token = os.getenv('TOKEN')
@@ -148,4 +147,4 @@ def send_whatsapp(data, context):
 
 
 if __name__ == '__main__':
-    send_whatsapp("data", "context")
+    send_whatsapp()
