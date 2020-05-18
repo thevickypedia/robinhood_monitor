@@ -5,12 +5,12 @@ Your stock viewer to check your portfolio from Robinhood
 
 1. git clone this repository
 
-2. Run this command in your terminal to install necessary packages<br/>cd robinhood_tracker/lib && pip3 install -r requirements.txt
+2. Run this command in your terminal to install necessary packages<br/>cd stock_hawk/lib && pip3 install -r requirements.txt
 
 2. Make sure you add the following env variables
 * user - Robinhood login email address
 * pass - Robinhood login password
-* qr - Robinhood MFA QR code (Check for steps in original [README.md](https://github.com/vignesh1793/robinhood_tracker/blob/master/README.md))
+* qr - Robinhood MFA QR code
 * ACCESS_KEY - AWS login access key
 * SECRET_KEY - AWS secret key
 * SENDER - sender email address (verified via AWS SES)
