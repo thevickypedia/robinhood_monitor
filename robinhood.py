@@ -3,13 +3,14 @@
  * Created:   05.08.2020
  *
  **/"""
-
+import json
 import math
 import os
 import sys
 import time
 from datetime import datetime
 
+import requests
 from pyrh import Robinhood
 from twilio.rest import Client
 
@@ -63,22 +64,26 @@ def watcher():
         buy = round(float(data['average_buy_price']), 2)
         shares_count = data['quantity'].split('.')[0]
         raw_details = rh.get_quote(share_id)
-        share_name = (raw_details['symbol'])
-        share_full_name = 'coming soon'
+        share_name = raw_details['symbol']
+        call = raw_details['instrument']
+        r = requests.get(call)
+        response = r.text
+        json_load = json.loads(response)
+        share_full_name = json_load['simple_name']
         total = round(int(shares_count) * float(buy), 2)
         shares_total.append(total)
-        current = (round(float(raw_details['last_trade_price']), 2))
+        current = round(float(raw_details['last_trade_price']), 2)
         current_total = round(int(shares_count) * current, 2)
         difference = round(float(current_total - total), 2)
         if difference < 0:
-            loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+            loss_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
                             f'Total bought: ${total} Current Total: ${current_total}'
-                            f'\nLOST ${-difference} on {share_full_name}\n')
+                            f'\nLOST ${-difference}\n')
             loss_total.append(-difference)
         else:
-            profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+            profit_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
                               f'Total bought: ${total} Current Total: ${current_total}'
-                              f'\nGained ${difference} on {share_full_name}\n')
+                              f'\nGained ${difference}\n')
             profit_total.append(difference)
 
     lost = round(math.fsum(loss_total), 2)

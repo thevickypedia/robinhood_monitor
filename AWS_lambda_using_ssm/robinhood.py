@@ -1,7 +1,9 @@
+import json
 import math
 import time
 from datetime import datetime, timedelta
 
+import requests
 from pyrh import Robinhood
 from twilio.rest import Client
 
@@ -40,7 +42,6 @@ def watcher():
     acc_id = account_user_id()
     raw_result = (rh.positions())
     result = raw_result['results']
-    share_code = dict(stock_id())
     shares_total = []
     port_msg = f'Your portfolio ({acc_id}):\n'
     loss_output = 'Loss:'
@@ -51,25 +52,28 @@ def watcher():
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
         shares_count = data['quantity'].split('.')[0]
-        for key, value in share_code.items():
-            if str(value) == share_id:
-                share_name = key.split("|")[0]
-                share_full_name = key.split("|")[1]
-                total = round(int(shares_count) * float(buy), 2)
-                shares_total.append(total)
-                current = round(float(rh.get_quote(share_name)['last_trade_price']), 2)
-                current_total = round(int(shares_count) * current, 2)
-                difference = round(float(current_total - total), 2)
-                if difference < 0:
-                    loss_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                                    f'Total bought: ${total} Current Total: ${current_total}'
-                                    f'\nLOST ${-difference} on {share_full_name}\n')
-                    loss_total.append(-difference)
-                else:
-                    profit_output += (f'\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                                      f'Total bought: ${total} Current Total: ${current_total}'
-                                      f'\nGained ${difference} on {share_full_name}\n')
-                    profit_total.append(difference)
+        raw_details = rh.get_quote(share_id)
+        share_name = (raw_details['symbol'])
+        call = raw_details['instrument']
+        r = requests.get(call)
+        response = r.text
+        json_load = json.loads(response)
+        share_full_name = json_load['simple_name']
+        total = round(int(shares_count) * float(buy), 2)
+        shares_total.append(total)
+        current = (round(float(raw_details['last_trade_price']), 2))
+        current_total = round(int(shares_count) * current, 2)
+        difference = round(float(current_total - total), 2)
+        if difference < 0:
+            loss_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                            f'Total bought: ${total} Current Total: ${current_total}'
+                            f'\nLOST ${-difference}\n')
+            loss_total.append(-difference)
+        else:
+            profit_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                              f'Total bought: ${total} Current Total: ${current_total}'
+                              f'\nGained ${difference}\n')
+            profit_total.append(difference)
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
