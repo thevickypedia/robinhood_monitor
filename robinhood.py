@@ -42,13 +42,6 @@ def account_user_id():
     return user
 
 
-def portfolio_value():
-    port = rh.portfolios()
-    current_val = port['equity']
-    current_value = round(float(current_val), 2)
-    return current_value
-
-
 def watcher():
     acc_id = account_user_id()
     raw_result = (rh.positions())
@@ -90,15 +83,22 @@ def watcher():
     gained = round(math.fsum(profit_total), 2)
     port_msg += f'The below values will differ from overall profit/loss if shares were purchased ' \
                 f'with different price values.\nTotal Profit: ${gained}\nTotal Loss: ${lost}\n'
-    net_worth = portfolio_value()
+    net_worth = round(float(rh.equity()), 2)
     output_ = f'\nCurrent value of your total investment is: ${net_worth}'
     total_buy = round(math.fsum(shares_total), 2)
     output_ += f'\nValue of your total investment while purchase is: ${total_buy}'
-    total_diff = round(float(net_worth - total_buy), 2)
+    total_diff = net_worth - total_buy
     if total_diff < 0:
         output_ += f'\nOverall Loss: ${total_diff}'
     else:
         output_ += f'\nOverall Profit: ${total_diff}'
+    yesterday_close = round(float(rh.equity_previous_close()), 2)
+    two_day_diff = round(float(net_worth - yesterday_close), 2)
+    output_ += f"\n\nYesterday's closing value: ${yesterday_close}"
+    if two_day_diff < 0:
+        output_ += f"\nToday's Dip: ${two_day_diff}"
+    else:
+        output_ += f"\nToday's Spike: ${two_day_diff}"
     # # use this if you wish to have conditional emails/notifications
     # final_output = f'{output_}\n\n{port_msg}\n{profit_output}\n{loss_output}'
     # return final_output
