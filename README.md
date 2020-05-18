@@ -5,7 +5,7 @@ Your stock viewer to check your portfolio from Robinhood
 
 1. git clone this repository
 
-2. Run this command in your terminal to install necessary packages<br/>cd robinhood_tracker/lib && pip3 install -r requirements.txt
+2. Run this command in your terminal to install necessary packages<br/>cd stock_hawk/lib && pip3 install -r requirements.txt
 
 2. Make sure you add the following env variables
 * user - Robinhood login email address
