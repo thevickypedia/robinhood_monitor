@@ -7,7 +7,6 @@ from twilio.rest import Client
 
 from lib.aws_client import AWSClients
 from lib.emailer import Emailer
-from lib.helper import stock_id
 
 u = AWSClients().user()
 p = AWSClients().pass_()
