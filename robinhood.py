@@ -87,7 +87,7 @@ def watcher():
     output_ = f'\nCurrent value of your total investment is: ${net_worth}'
     total_buy = round(math.fsum(shares_total), 2)
     output_ += f'\nValue of your total investment while purchase is: ${total_buy}'
-    total_diff = net_worth - total_buy
+    total_diff = round(float(net_worth - total_buy), 2)
     if total_diff < 0:
         output_ += f'\nOverall Loss: ${total_diff}'
     else:
