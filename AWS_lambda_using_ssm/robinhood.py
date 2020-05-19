@@ -85,9 +85,9 @@ def watcher():
     two_day_diff = round(float(net_worth - yesterday_close), 2)
     output_ += f"\n\nYesterday's closing value: ${yesterday_close}"
     if two_day_diff < 0:
-        output_ += f"\nToday's Dip: ${two_day_diff}"
+        output_ += f"\nCurrent Dip: ${two_day_diff}"
     else:
-        output_ += f"\nToday's Spike: ${two_day_diff}"
+        output_ += f"\nCurrent Spike: ${two_day_diff}"
     # # use this if you wish to have conditional emails/notifications
     # final_output = f'{output_}\n\n{port_msg}\n{profit_output}\n{loss_output}'
     # return final_output
