@@ -9,22 +9,23 @@
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
 import boto3
 
 
 class Emailer:
-    def __init__(self, sender: str, recipients: list, title: str, text: str):
+    def __init__(self, sender: str, recipients: list, title: str, text: str, attachment: list = None):
         boto3_ses_client = boto3.Session(
             # vig
             aws_access_key_id=os.getenv('ACCESS_KEY'),
             aws_secret_access_key=os.getenv('SECRET_KEY'),
         ).client('ses', region_name=os.getenv('REGION'))
 
-        response_ = self.send_mail(boto3_ses_client, sender, recipients, title, text)
+        response_ = self.send_mail(boto3_ses_client, sender, recipients, title, text, attachment)
         print(response_)
 
-    def create_multipart_message(self, sender: str, recipients: list, title: str, text: str) -> MIMEMultipart:
+    def create_multipart_message(self, sender: str, recipients: list, title: str, text: str, attachment: list = None) -> MIMEMultipart:
         multipart_content_subtype = 'alternative' if text else 'mixed'
         msg = MIMEMultipart(multipart_content_subtype)
         msg['Subject'] = title
@@ -33,11 +34,20 @@ class Emailer:
         if text:
             part = MIMEText(text, 'plain')
             msg.attach(part)
+        if attachment:
+            import os
+            for root, dirs, files in os.walk("img"):
+                for name in files:
+                    path = os.path.join(root, name)
+                    with open(path, 'rb') as f:
+                        part = MIMEApplication(f.read())
+                        part.add_header('Content-Disposition', 'attachment', filename=name)
+                        msg.attach(part)
         return msg
 
-    def send_mail(self, boto3, sender: str, recipients: list, title: str, text: str) -> dict:
+    def send_mail(self, boto3, sender: str, recipients: list, title: str, text: str, attachment: list = None) -> dict:
         print("Sending email...")
-        msg = self.create_multipart_message(sender, recipients, title, text)
+        msg = self.create_multipart_message(sender, recipients, title, text, attachment)
         ses_client = boto3
         return ses_client.send_raw_email(
             Source=sender,

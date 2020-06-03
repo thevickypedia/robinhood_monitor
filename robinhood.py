@@ -43,6 +43,7 @@ def account_user_id():
 
 
 def watcher():
+    global graph_msg
     acc_id = account_user_id()
     raw_result = (rh.positions())
     result = raw_result['results']
@@ -69,15 +70,46 @@ def watcher():
         current_total = round(int(shares_count) * current, 2)
         difference = round(float(current_total - total), 2)
         if difference < 0:
-            loss_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                            f'Total bought: ${total} Current Total: ${current_total}'
-                            f'\nLOST ${-difference}\n')
+            loss_output += (
+                f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                f'Total bought: ${total} Current Total: ${current_total}'
+                f'\nLOST ${-difference}\n')
             loss_total.append(-difference)
         else:
-            profit_output += (f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
-                              f'Total bought: ${total} Current Total: ${current_total}'
-                              f'\nGained ${difference}\n')
+            profit_output += (
+                f'\n{share_full_name}:\n{shares_count} shares of {share_name} at ${buy} Currently: ${current}\n'
+                f'Total bought: ${total} Current Total: ${current_total}'
+                f'\nGained ${difference}\n')
             profit_total.append(difference)
+        graph_min = float(os.getenv('graph_min'))
+        graph_max = float(os.getenv('graph_max'))
+        if graph_min and graph_max:
+            if difference > graph_max or difference < -graph_min:
+                from datetime import datetime, timedelta
+                import matplotlib.pyplot as plt
+                time_now = datetime.now()
+                metrics = time_now - timedelta(days=7)
+                start = metrics.strftime('%m-%d %H:%M')
+                end = time_now.strftime('%m-%d %H:%M')
+                numbers = []
+                historic_data = (rh.get_historical_quotes(share_name, '10minute', 'week'))
+                historic_results = historic_data['results']
+                for each_item in historic_results:
+                    historical_values = (each_item['historicals'])
+                    for close_price in historical_values:
+                        numbers.append(round(float(close_price['close_price']), 2))
+                        # lough = b['begins_at']
+                        # date = lough[5:16].replace('T', ' ')
+                        # time_.append(matplotlib.dates.date2num(datetime.strptime(lough, '%Y-%m-%dT%H:%M:%SZ')))
+                fig, ax = plt.subplots()
+                plt.title(f"Stock Price Trend for {share_name} from {start} to {end}\n")
+                plt.ylabel("Price in USD")
+                plt.xlabel("1 Week trend with 10 minutes interval")
+                ax.plot(numbers, linewidth=1.5)
+                fig.savefig(f"img/{share_full_name}.png", format="png")
+                graph_msg = f'Below are the graphs for stocks which exceeded {graph_max} or deceeded {graph_min}'
+        else:
+            graph_msg = 'Add the env variables graph_min=0.0 and graph_max=0.0 to include a graph of past week trend'
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
@@ -102,10 +134,10 @@ def watcher():
     # # use this if you wish to have conditional emails/notifications
     # final_output = f'{output_}\n\n{port_msg}\n{profit_output}\n{loss_output}'
     # return final_output
-    return port_msg, profit_output, loss_output, output_
+    return port_msg, profit_output, loss_output, output_, graph_msg
 
 
-port_head, profit, loss, overall_result = watcher()
+port_head, profit, loss, overall_result, graph_msg = watcher()
 
 
 def send_email():
@@ -121,10 +153,20 @@ def send_email():
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
     title = f'Investment Summary as of {dt_string}'
-    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    attachment = 'placeholder'
     # # use this if you wish to have conditional emails/notifications
     # text = f'{watcher()}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
-    email = Emailer(sender, recipient, title, text)
+    email = Emailer(sender, recipient, title, text, attachment)
+    directory = os.listdir("img")
+    graph_status = []
+    for item in directory:
+        if item:
+            os.remove(os.path.join("img", item))
+            graph_status.append(item.strip('.png'))
+        else:
+            print('No files to remove')
+    print(f"Removed graph generated for {graph_status}")
     return email
 
 
@@ -141,7 +183,6 @@ def send_whatsapp():
                                     f'summary',
                                from_=from_number,
                                to=to_number)
-        print(f"Script execution time: {round(float(time.time() - start_time), 2)} seconds")
     else:
         return None
 
