@@ -189,3 +189,4 @@ def send_whatsapp():
 
 if __name__ == '__main__':
     send_whatsapp()
+    print(f"\nScript execution time: {round(float(time.time() - start_time), 2)} seconds")
