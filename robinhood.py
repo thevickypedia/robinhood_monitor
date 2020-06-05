@@ -17,6 +17,10 @@ from twilio.rest import Client
 from lib.emailer import Emailer
 
 start_time = time.time()
+now = datetime.now()
+dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
+print(dt_string)
+
 u = os.getenv('user')
 p = os.getenv('pass')
 q = os.getenv('qr')
@@ -29,10 +33,6 @@ if not u or not p or not q:
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
 
-now = datetime.now()
-dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
-
-print(dt_string)
 print('Gathering your investment details...')
 
 
@@ -81,9 +81,9 @@ def watcher():
                 f'Total bought: ${total} Current Total: ${current_total}'
                 f'\nGained ${difference}\n')
             profit_total.append(difference)
-        graph_min = float(os.getenv('graph_min'))
-        graph_max = float(os.getenv('graph_max'))
-        if graph_min and graph_max:
+        try:
+            graph_min = float(os.getenv('graph_min'))
+            graph_max = float(os.getenv('graph_max'))
             if difference > graph_max or difference < -graph_min:
                 from datetime import datetime, timedelta
                 import matplotlib.pyplot as plt
@@ -102,14 +102,21 @@ def watcher():
                         # date = lough[5:16].replace('T', ' ')
                         # time_.append(matplotlib.dates.date2num(datetime.strptime(lough, '%Y-%m-%dT%H:%M:%SZ')))
                 fig, ax = plt.subplots()
-                plt.title(f"Stock Price Trend for {share_name} from {start} to {end}\n")
-                plt.ylabel("Price in USD")
-                plt.xlabel("1 Week trend with 10 minutes interval")
+                plt.title(f"Stock Price Trend for {share_full_name}\nTotal bought: ${total}"
+                          f"Current Total: ${current_total}")
+                if difference > graph_max:
+                    plt.ylabel(f"Price in USD. Profit: ${difference}")
+                elif difference < graph_min:
+                    plt.ylabel(f"Price in USD. Loss: ${difference}")
+                plt.xlabel(f"1 Week trend with 10 minutes interval from {start} to {end}")
                 ax.plot(numbers, linewidth=1.5)
                 fig.savefig(f"img/{share_full_name}.png", format="png")
                 graph_msg = f'Below are the graphs for stocks which exceeded {graph_max} or deceeded {graph_min}'
-        else:
-            graph_msg = 'Add the env variables graph_min=0.0 and graph_max=0.0 to include a graph of past week trend'
+            else:
+                graph_msg = f'You have not lost more than ${graph_min} or gained more than ${graph_max} ' \
+                            f'to generate graphs'
+        except TypeError:
+            graph_msg = 'Add the env variables for <graph_min> and <graph_max> to include a graph of past week trend'
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
@@ -153,10 +160,9 @@ def send_email():
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
     title = f'Investment Summary as of {dt_string}'
-    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
+    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\nNavigate to check logs: ' \
+           f'{logs}\n\n{footer_text}'
     attachment = 'placeholder'
-    # # use this if you wish to have conditional emails/notifications
-    # text = f'{watcher()}\n\nNavigate to check logs: {logs}\n\n{footer_text}'
     email = Emailer(sender, recipient, title, text, attachment)
     directory = os.listdir("img")
     graph_status = []
@@ -164,9 +170,10 @@ def send_email():
         if item:
             os.remove(os.path.join("img", item))
             graph_status.append(item.strip('.png'))
-        else:
-            print('No files to remove')
-    print(f"Removed graph generated for {graph_status}")
+    if graph_status:
+        print(f"\nRemoved graph generated for {graph_status}")
+    else:
+        print('No files to remove')
     return email
 
 
