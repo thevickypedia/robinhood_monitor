@@ -6,9 +6,8 @@
 import json
 import math
 import os
-import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from pyrh import Robinhood
@@ -19,16 +18,16 @@ from lib.emailer import Emailer
 start_time = time.time()
 now = datetime.now()
 dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
-print(dt_string)
+print(f'\n{dt_string}')
 
 u = os.getenv('user')
 p = os.getenv('pass')
 q = os.getenv('qr')
 
 if not u or not p or not q:
-    print("Check your local environment variables. It should be set as:\n\n"
+    print("\nCheck your local environment variables. It should be set as:\n"
           "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
-    sys.exit()
+    exit(1)
 
 rh = Robinhood()
 rh.login(username=u, password=p, qr_code=q)
@@ -85,7 +84,6 @@ def watcher():
             graph_min = float(os.getenv('graph_min'))
             graph_max = float(os.getenv('graph_max'))
             if difference > graph_max or difference < -graph_min:
-                from datetime import datetime, timedelta
                 import matplotlib.pyplot as plt
                 time_now = datetime.now()
                 metrics = time_now - timedelta(days=7)
@@ -116,7 +114,7 @@ def watcher():
                 graph_msg = f'You have not lost more than ${graph_min} or gained more than ${graph_max} ' \
                             f'to generate graphs'
         except TypeError:
-            graph_msg = 'Add the env variables for <graph_min> and <graph_max> to include a graph of past week trend'
+            graph_msg = 'Add the env variables for <graph_min> and <graph_max> to include a graph of past week trend.'
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
