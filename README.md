@@ -1,5 +1,5 @@
 # Stock Monitor
-Your stock viewer to check your portfolio from Robinhood
+Get a report of your investments from Robinhood along with graphs for previous week stock trend. 
 
 ## Setup
 
@@ -21,7 +21,7 @@ Your stock viewer to check your portfolio from Robinhood
 * SEND - sender whats app number (fromat - +1xxxxxxxxxx)
 * RECEIVE - receiver whats app number (fromat - +1xxxxxxxxxx)<br><br>
 
-To use [qr_code](https://github.com/thevickypedia/robinhood_tracker/blob/master/robinhood.py#L30) you must enable Two-Factor Authentication. Follow steps:
+To use [qr_code](https://github.com/thevickypedia/robinhood_monitor/blob/master/robinhood.py#L29) you must enable Two-Factor Authentication. Follow steps:
 * Login to your Robinhood Web App.
 * Go to Account -> Settings or click [me](https://robinhood.com/account/settings)
 * Turn on Two-Factor Authentication.
