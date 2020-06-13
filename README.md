@@ -1,6 +1,8 @@
 # Stock Monitor
 Get a report of your investments from Robinhood along with graphs for previous week stock trend. 
 
+Click to visit the AWS version [Stock Hawk](https://github.com/thevickypedia/stock_hawk)
+
 ## Setup
 
 1. git clone this repository
