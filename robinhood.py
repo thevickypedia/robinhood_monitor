@@ -15,25 +15,6 @@ from twilio.rest import Client
 
 from lib.emailer import Emailer
 
-start_time = time.time()
-now = datetime.now()
-dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
-print(f'\n{dt_string}')
-
-u = os.getenv('user')
-p = os.getenv('pass')
-q = os.getenv('qr')
-
-if not u or not p or not q:
-    print("\nCheck your local environment variables. It should be set as:\n"
-          "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
-    exit(1)
-
-rh = Robinhood()
-rh.login(username=u, password=p, qr_code=q)
-
-print('Gathering your investment details...')
-
 
 def account_user_id():
     ac = rh.get_account()
@@ -142,9 +123,6 @@ def watcher():
     return port_msg, profit_output, loss_output, output_, graph_msg
 
 
-port_head, profit, loss, overall_result, graph_msg = watcher()
-
-
 def send_email():
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
@@ -193,5 +171,20 @@ def send_whatsapp():
 
 
 if __name__ == '__main__':
+    u = os.getenv('user')
+    p = os.getenv('pass')
+    q = os.getenv('qr')
+    if not u or not p or not q:
+        print("\nCheck your local environment variables. It should be set as:\n"
+              "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
+        exit(1)
+    rh = Robinhood()
+    rh.login(username=u, password=p, qr_code=q)
+    start_time = time.time()
+    now = datetime.now()
+    dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
+    print(f'\n{dt_string}')
+    print('Gathering your investment details...')
+    port_head, profit, loss, overall_result, graph_msg = watcher()
     send_whatsapp()
     print(f"\nScript execution time: {round(float(time.time() - start_time), 2)} seconds")
