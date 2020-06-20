@@ -34,10 +34,13 @@ def watcher():
     loss_total = []
     profit_total = []
     graph_msg = None  # initiates a variable graph_msg as None for looped condition below
+    n = 0
     for data in result:
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
         shares_count = data['quantity'].split('.')[0]
+        if int(shares_count) != 0:
+            n = n + 1
         raw_details = rh.get_quote(share_id)
         share_name = raw_details['symbol']
         call = raw_details['instrument']
@@ -81,15 +84,14 @@ def watcher():
                 if difference > graph_max:
                     plt.title(f"Stock Price Trend for {share_full_name}\nProfit: ${difference}")
                 elif difference < graph_min:
-                    plt.title(f"Stock Price Trend for {share_full_name}\nLoss: ${difference}")
+                    plt.title(f"Stock Price Trend for {share_full_name}\nLOSS: ${-difference}")
                 plt.xlabel(f"1 Week trend with 10 minutes interval from {start} to {end}")
                 plt.ylabel('Price in USD')
                 ax.plot(numbers, linewidth=1.5)
-                path = 'img'
-                directory = os.path.isdir(path)
-                if not directory:
+                if not os.path.isdir('img'):
                     os.mkdir('img')
                 fig.savefig(f"img/{share_full_name}.png", format="png")
+                plt.close()  # close plt to avoid memory exception when more than 20 graphs are generated
                 # stores graph_msg only if a graph is generated else graph_msg remains None
                 if not graph_msg:  # used if not to avoid storing the message repeatedly
                     graph_msg = f"Attached are the graphs for stocks which exceeded a profit of " \
@@ -103,29 +105,31 @@ def watcher():
     port_msg += f'The below values will differ from overall profit/loss if shares were purchased ' \
                 f'with different price values.\nTotal Profit: ${gained}\nTotal Loss: ${lost}\n'
     net_worth = round(float(rh.equity()), 2)
-    output_ = f'\nCurrent value of your total investment is: ${net_worth}'
+    output = f'Total number of stocks purchased: {n}\n'
+    output += f'Current value of your total investment is: ${net_worth}\n'
     total_buy = round(math.fsum(shares_total), 2)
-    output_ += f'\nValue of your total investment while purchase is: ${total_buy}'
+    output += f'Value of your total investment while purchase is: ${total_buy}\n'
     total_diff = round(float(net_worth - total_buy), 2)
     if total_diff < 0:
-        output_ += f'\nOverall Loss: ${total_diff}'
+        output += f'Overall Loss: ${total_diff}'
     else:
-        output_ += f'\nOverall Profit: ${total_diff}'
+        output += f'Overall Profit: ${total_diff}'
     yesterday_close = round(float(rh.equity_previous_close()), 2)
     two_day_diff = round(float(net_worth - yesterday_close), 2)
-    output_ += f"\n\nYesterday's closing value: ${yesterday_close}"
+    output += f"\n\nYesterday's closing value: ${yesterday_close}"
     if two_day_diff < 0:
-        output_ += f"\nCurrent Dip: ${two_day_diff}"
+        output += f"\nCurrent Dip: ${two_day_diff}"
     else:
-        output_ += f"\nCurrent Spike: ${two_day_diff}"
+        output += f"\nCurrent Spike: ${two_day_diff}"
     if not graph_msg:  # if graph_msg was not set above
         graph_msg = f"You have not lost more than ${os.getenv('graph_min')} or gained more than " \
                     f"${os.getenv('graph_max')} to generate a graph."
 
-    return port_msg, profit_output, loss_output, output_, graph_msg
+    return port_msg, profit_output, loss_output, output, graph_msg
 
 
 def send_email():
+    print("Sending email...")
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
     git = 'https://github.com/thevickypedia/robinhood_monitor'
@@ -147,18 +151,18 @@ def send_email():
 
 
 def send_whatsapp():
-    if send_email():
-        sid = os.getenv('SID')
-        token = os.getenv('TOKEN')
-        sender = f"whatsapp:{os.getenv('SEND')}"
-        receiver = f"whatsapp:{os.getenv('RECEIVE')}"
-        client = Client(sid, token)
-        from_number = sender
-        to_number = receiver
-        client.messages.create(body=f'{dt_string}\nRobinhood Report\n{overall_result}\n\nCheck your email for '
-                                    f'summary',
-                               from_=from_number,
-                               to=to_number)
+    print('Sending whats app notification...')
+    sid = os.getenv('SID')
+    token = os.getenv('TOKEN')
+    sender = f"whatsapp:{os.getenv('SEND')}"
+    receiver = f"whatsapp:{os.getenv('RECEIVE')}"
+    client = Client(sid, token)
+    from_number = sender
+    to_number = receiver
+    client.messages.create(body=f'{dt_string}\nRobinhood Report\n{overall_result}\n\nCheck your email for '
+                                f'summary',
+                           from_=from_number,
+                           to=to_number)
 
 
 if __name__ == '__main__':
@@ -177,5 +181,6 @@ if __name__ == '__main__':
     print(f'\n{dt_string}')
     print('Gathering your investment details...')
     port_head, profit, loss, overall_result, graph_msg = watcher()
+    send_email()
     send_whatsapp()
-    print(f"\nScript execution time: {round(float(time.time() - start_time), 2)} seconds")
+    print(f"Process Completed in {round(float(time.time() - start_time), 2)} seconds")

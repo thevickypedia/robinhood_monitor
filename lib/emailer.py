@@ -45,7 +45,6 @@ class Emailer:
         return msg
 
     def send_mail(self, boto3, sender: str, recipients: list, title: str, text: str, attachment: list = None) -> dict:
-        print("Sending email...")
         msg = self.create_multipart_message(sender, recipients, title, text, attachment)
         ses_client = boto3
         return ses_client.send_raw_email(
