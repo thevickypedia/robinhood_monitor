@@ -33,6 +33,7 @@ def watcher():
     profit_output = 'Profit:'
     loss_total = []
     profit_total = []
+    graph_msg = None  # initiates a variable graph_msg as None for looped condition below
     for data in result:
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
@@ -61,14 +62,10 @@ def watcher():
                 f'Total bought: ${total} Current Total: ${current_total}'
                 f'\nGained ${difference}\n')
             profit_total.append(difference)
-        try:
+        if os.getenv('graph_min') and os.getenv('graph_max'):
             graph_min = float(os.getenv('graph_min'))
             graph_max = float(os.getenv('graph_max'))
             if difference > graph_max or difference < -graph_min:
-                path = 'img'
-                isDir = os.path.isdir(path)
-                if not isDir:
-                    os.mkdir('img')
                 import matplotlib.pyplot as plt
                 time_now = datetime.now()
                 metrics = time_now - timedelta(days=7)
@@ -77,23 +74,27 @@ def watcher():
                 numbers = []
                 historic_data = (rh.get_historical_quotes(share_name, '10minute', 'week'))
                 historic_results = historic_data['results']
-                for each_item in historic_results:
-                    historical_values = (each_item['historicals'])
-                    for close_price in historical_values:
-                        numbers.append(round(float(close_price['close_price']), 2))
-                        # lough = b['begins_at']
-                        # date = lough[5:16].replace('T', ' ')
-                        # time_.append(matplotlib.dates.date2num(datetime.strptime(lough, '%Y-%m-%dT%H:%M:%SZ')))
+                historical_values = historic_results[0]['historicals']
+                for close_price in historical_values:
+                    numbers.append(round(float(close_price['close_price']), 2))
                 fig, ax = plt.subplots()
                 if difference > graph_max:
                     plt.title(f"Stock Price Trend for {share_full_name}\nProfit: ${difference}")
                 elif difference < graph_min:
                     plt.title(f"Stock Price Trend for {share_full_name}\nLoss: ${difference}")
                 plt.xlabel(f"1 Week trend with 10 minutes interval from {start} to {end}")
-                plt.ylabel(f"Price in USD.")
+                plt.ylabel('Price in USD')
                 ax.plot(numbers, linewidth=1.5)
+                path = 'img'
+                directory = os.path.isdir(path)
+                if not directory:
+                    os.mkdir('img')
                 fig.savefig(f"img/{share_full_name}.png", format="png")
-        except TypeError:
+                # stores graph_msg only if a graph is generated else graph_msg remains None
+                if not graph_msg:  # used if not to avoid storing the message repeatedly
+                    graph_msg = f"Attached are the graphs for stocks which exceeded a profit of " \
+                                f"${os.getenv('graph_max')} or deceeded a loss of ${os.getenv('graph_min')}"
+        elif not graph_msg:  # used elif not to avoid storing the message repeatedly
             graph_msg = "Add the env variables for <graph_min> and <graph_max> to include a graph of previous " \
                         "week's trend."
 
@@ -117,13 +118,10 @@ def watcher():
         output_ += f"\nCurrent Dip: ${two_day_diff}"
     else:
         output_ += f"\nCurrent Spike: ${two_day_diff}"
-    # files = [file for file in os.listdir('img') if file.endswith('.png')]
-    if os.listdir('img'):
-        graph_msg = f"Below are the graphs for stocks which exceeded ${os.getenv('graph_max')} or deceeded " \
-                    f"${os.getenv('graph_min')}"
-    elif not graph_msg:
+    if not graph_msg:  # if graph_msg was not set above
         graph_msg = f"You have not lost more than ${os.getenv('graph_min')} or gained more than " \
-                    f"${os.getenv('graph_max')} to generate graphs"
+                    f"${os.getenv('graph_max')} to generate a graph."
+
     return port_msg, profit_output, loss_output, output_, graph_msg
 
 
@@ -142,19 +140,9 @@ def send_email():
     text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\n{footer_text}'
     attachment = 'placeholder'
     email = Emailer(sender, recipient, title, text, attachment)
-    try:
-        directory = os.listdir("img")
-        graph_status = []
-        for item in directory:
-            if item:
-                os.remove(os.path.join("img", item))
-                graph_status.append(item.strip('.png'))
-        if graph_status:
-            print(f"\nRemoved graph generated for {graph_status}")
-        else:
-            print('No files to remove')
-    except FileNotFoundError:
-        pass
+    if 'Attached' in graph_msg:  # only tries to delete if graphs have been generated
+        import shutil
+        shutil.rmtree('img')
     return email
 
 
