@@ -159,8 +159,6 @@ def send_whatsapp():
                                     f'summary',
                                from_=from_number,
                                to=to_number)
-    else:
-        return None
 
 
 if __name__ == '__main__':

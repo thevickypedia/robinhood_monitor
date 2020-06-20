@@ -17,11 +17,17 @@ Click to visit the AWS version [Stock Hawk](https://github.com/thevickypedia/sto
 * SECRET_KEY - AWS secret key
 * SENDER - sender email address (verified via AWS SES)
 * RECIPIENT - receiver email address (verified via AWS SES)
-<br/><br/>Optional (If you'd like to setup whats app notifications else skip these, app will still run):
+
+Optional: (If you'd like to setup whats app notifications else skip these, app will still run):
 * SID - S-ID from twilio
 * TOKEN - Token from twilio
 * SEND - sender whats app number (fromat - +1xxxxxxxxxx)
-* RECEIVE - receiver whats app number (fromat - +1xxxxxxxxxx)<br><br>
+* RECEIVE - receiver whats app number (fromat - +1xxxxxxxxxx)
+
+Optional: (If you'd like to receive graphs certain profit or loss):
+* graph_min - Minimum value below which you'd like to generate graphs
+* graph_max - Maximum value above which you'd like to generate graphs
+<br><br>
 
 To use [qr_code](https://github.com/thevickypedia/robinhood_monitor/blob/master/robinhood.py#L29) you must enable Two-Factor Authentication. Follow steps:
 * Login to your Robinhood Web App.
