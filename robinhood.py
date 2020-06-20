@@ -65,6 +65,10 @@ def watcher():
             graph_min = float(os.getenv('graph_min'))
             graph_max = float(os.getenv('graph_max'))
             if difference > graph_max or difference < -graph_min:
+                path = 'img'
+                isDir = os.path.isdir(path)
+                if not isDir:
+                    os.mkdir('img')
                 import matplotlib.pyplot as plt
                 time_now = datetime.now()
                 metrics = time_now - timedelta(days=7)
@@ -81,21 +85,17 @@ def watcher():
                         # date = lough[5:16].replace('T', ' ')
                         # time_.append(matplotlib.dates.date2num(datetime.strptime(lough, '%Y-%m-%dT%H:%M:%SZ')))
                 fig, ax = plt.subplots()
-                plt.title(f"Stock Price Trend for {share_full_name}\nTotal bought: ${total}"
-                          f"Current Total: ${current_total}")
                 if difference > graph_max:
-                    plt.ylabel(f"Price in USD. Profit: ${difference}")
+                    plt.title(f"Stock Price Trend for {share_full_name}\nProfit: ${difference}")
                 elif difference < graph_min:
-                    plt.ylabel(f"Price in USD. Loss: ${difference}")
+                    plt.title(f"Stock Price Trend for {share_full_name}\nLoss: ${difference}")
                 plt.xlabel(f"1 Week trend with 10 minutes interval from {start} to {end}")
+                plt.ylabel(f"Price in USD.")
                 ax.plot(numbers, linewidth=1.5)
                 fig.savefig(f"img/{share_full_name}.png", format="png")
-                graph_msg = f'Below are the graphs for stocks which exceeded {graph_max} or deceeded {graph_min}'
-            else:
-                graph_msg = f'You have not lost more than ${graph_min} or gained more than ${graph_max} ' \
-                            f'to generate graphs'
         except TypeError:
-            graph_msg = 'Add the env variables for <graph_min> and <graph_max> to include a graph of past week trend.'
+            graph_msg = "Add the env variables for <graph_min> and <graph_max> to include a graph of previous " \
+                        "week's trend."
 
     lost = round(math.fsum(loss_total), 2)
     gained = round(math.fsum(profit_total), 2)
@@ -117,17 +117,20 @@ def watcher():
         output_ += f"\nCurrent Dip: ${two_day_diff}"
     else:
         output_ += f"\nCurrent Spike: ${two_day_diff}"
-    # # use this if you wish to have conditional emails/notifications
-    # final_output = f'{output_}\n\n{port_msg}\n{profit_output}\n{loss_output}'
-    # return final_output
+    # files = [file for file in os.listdir('img') if file.endswith('.png')]
+    if os.listdir('img'):
+        graph_msg = f"Below are the graphs for stocks which exceeded ${os.getenv('graph_max')} or deceeded " \
+                    f"${os.getenv('graph_min')}"
+    elif not graph_msg:
+        graph_msg = f"You have not lost more than ${os.getenv('graph_min')} or gained more than " \
+                    f"${os.getenv('graph_max')} to generate graphs"
     return port_msg, profit_output, loss_output, output_, graph_msg
 
 
 def send_email():
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
-    logs = 'https://us-west-2.console.aws.amazon.com/cloudwatch/home#logStream:group=/aws/lambda/robinhood'
-    git = 'https://github.com/thevickypedia/stock_hawk'
+    git = 'https://github.com/thevickypedia/robinhood_monitor'
     footer_text = "\n----------------------------------------------------------------" \
                   "----------------------------------------\n" \
                   "A report on the list shares you have purchased.\n" \
@@ -136,20 +139,22 @@ def send_email():
     sender = f'Robinhood Monitor <{sender_env}>'
     recipient = [f'{recipient_env}']
     title = f'Investment Summary as of {dt_string}'
-    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\nNavigate to check logs: ' \
-           f'{logs}\n\n{footer_text}'
+    text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\n{footer_text}'
     attachment = 'placeholder'
     email = Emailer(sender, recipient, title, text, attachment)
-    directory = os.listdir("img")
-    graph_status = []
-    for item in directory:
-        if item:
-            os.remove(os.path.join("img", item))
-            graph_status.append(item.strip('.png'))
-    if graph_status:
-        print(f"\nRemoved graph generated for {graph_status}")
-    else:
-        print('No files to remove')
+    try:
+        directory = os.listdir("img")
+        graph_status = []
+        for item in directory:
+            if item:
+                os.remove(os.path.join("img", item))
+                graph_status.append(item.strip('.png'))
+        if graph_status:
+            print(f"\nRemoved graph generated for {graph_status}")
+        else:
+            print('No files to remove')
+    except FileNotFoundError:
+        pass
     return email
 
 

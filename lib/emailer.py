@@ -22,8 +22,7 @@ class Emailer:
             aws_secret_access_key=os.getenv('SECRET_KEY'),
         ).client('ses', region_name='us-west-2')
 
-        response_ = self.send_mail(boto3_ses_client, sender, recipients, title, text, attachment)
-        print(response_)
+        self.send_mail(boto3_ses_client, sender, recipients, title, text, attachment)
 
     def create_multipart_message(self, sender: str, recipients: list, title: str, text: str, attachment: list = None) -> MIMEMultipart:
         multipart_content_subtype = 'alternative' if text else 'mixed'
