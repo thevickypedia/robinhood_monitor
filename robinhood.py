@@ -128,7 +128,7 @@ def watcher():
     return port_msg, profit_output, loss_output, output, graph_msg
 
 
-def send_email():
+def send_email(attachment):
     print("Sending email...")
     sender_env = os.getenv('SENDER')
     recipient_env = os.getenv('RECIPIENT')
@@ -142,7 +142,6 @@ def send_email():
     recipient = [f'{recipient_env}']
     title = f'Investment Summary as of {dt_string}'
     text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\n{footer_text}'
-    attachment = 'placeholder'
     email = Emailer(sender, recipient, title, text, attachment)
     if 'Attached' in graph_msg:  # only tries to delete if graphs have been generated
         import shutil
@@ -181,6 +180,6 @@ if __name__ == '__main__':
     print(f'\n{dt_string}')
     print('Gathering your investment details...')
     port_head, profit, loss, overall_result, graph_msg = watcher()
-    send_email()
+    send_email(attachment=True)
     send_whatsapp()
     print(f"Process Completed in {round(float(time.time() - start_time), 2)} seconds")
