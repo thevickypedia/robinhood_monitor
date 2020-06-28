@@ -41,3 +41,9 @@ Alternatively you can also run this code without Two-Factor Authentication but i
 You can also change the way you receive validation code from email to sms by including challenge_type="sms" in your [login](https://github.com/thevickypedia/robinhood_tracker/blob/master/robinhood.py#L30)
 
 Click to learn more about [pyrh](https://pypi.org/project/pyrh/)
+
+## License & copyright
+
+&copy; Vignesh Sivanandha Rao, Robinhood Monitor
+
+Licensed under the [MIT License](LICENSE)
