@@ -142,11 +142,10 @@ def send_email(attachment):
     recipient = [f'{recipient_env}']
     title = f'Investment Summary as of {dt_string}'
     text = f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\n{footer_text}'
-    email = Emailer(sender, recipient, title, text, attachment)
+    Emailer(sender, recipient, title, text, attachment)
     if 'Attached' in graph_msg:  # only tries to delete if graphs have been generated
         import shutil
         shutil.rmtree('img')
-    return email
 
 
 def send_whatsapp():
@@ -165,6 +164,7 @@ def send_whatsapp():
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     u = os.getenv('user')
     p = os.getenv('pass')
     q = os.getenv('qr')
@@ -174,7 +174,6 @@ if __name__ == '__main__':
         exit(1)
     rh = Robinhood()
     rh.login(username=u, password=p, qr_code=q)
-    start_time = time.time()
     now = datetime.now()
     dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
     print(f'\n{dt_string}')
