@@ -16,19 +16,12 @@ from twilio.rest import Client
 from lib.emailer import Emailer
 
 
-def account_user_id():
-    ac = rh.get_account()
-    user = ac['account_number']
-    return user
-
-
 def watcher():
     global graph_msg
-    acc_id = account_user_id()
     raw_result = (rh.positions())
     result = raw_result['results']
     shares_total = []
-    port_msg = f'Your portfolio ({acc_id}):\n'
+    port_msg = f"Your portfolio ({rh.get_account()['account_number']}):\n"
     loss_output = 'Loss:'
     profit_output = 'Profit:'
     loss_total = []
@@ -41,6 +34,8 @@ def watcher():
         shares_count = data['quantity'].split('.')[0]
         if int(shares_count) != 0:
             n = n + 1
+        else:
+            continue
         raw_details = rh.get_quote(share_id)
         share_name = raw_details['symbol']
         call = raw_details['instrument']
