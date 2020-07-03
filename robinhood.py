@@ -7,13 +7,24 @@ import json
 import math
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 import requests
+from pandas import read_html as reader
 from pyrh import Robinhood
 from twilio.rest import Client
 
 from lib.emailer import Emailer
+
+
+def market_status():
+    url = 'https://www.nasdaqtrader.com/trader.aspx?id=Calendar'
+    holidays_list = list(reader(url)[0][0])
+    today = date.today().strftime("%B %-d, %Y")
+    if today in holidays_list:
+        print(f'{today}: The markets are closed today.')
+    else:
+        return True
 
 
 def watcher():
@@ -38,10 +49,6 @@ def watcher():
             continue
         raw_details = rh.get_quote(share_id)
         share_name = raw_details['symbol']
-        prev_close = datetime.strptime(rh.previous_close_date(share_name)[0][0], '%Y-%m-%d').date()
-        yesterday = datetime.today().date() - timedelta(days=1)
-        if prev_close != yesterday:
-            continue
         call = raw_details['instrument']
         r = requests.get(call)
         response = r.text
@@ -163,24 +170,22 @@ def send_whatsapp():
 
 
 if __name__ == '__main__':
-    start_time = time.time()
-    u = os.getenv('user')
-    p = os.getenv('pass')
-    q = os.getenv('qr')
-    if not u or not p or not q:
-        print("\nCheck your local environment variables. It should be set as:\n"
-              "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
-        exit(1)
-    rh = Robinhood()
-    rh.login(username=u, password=p, qr_code=q)
-    now = datetime.now()
-    dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
-    print(f'\n{dt_string}')
-    print('Gathering your investment details...')
-    port_head, profit, loss, overall_result, graph_msg = watcher()
-    if profit == 'Profit:' and loss == 'Loss:':
-        print('The markets are closed today.')
-    else:
+    if market_status():
+        start_time = time.time()
+        u = os.getenv('user')
+        p = os.getenv('pass')
+        q = os.getenv('qr')
+        if not u or not p or not q:
+            print("\nCheck your local environment variables. It should be set as:\n"
+                  "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
+            exit(1)
+        rh = Robinhood()
+        rh.login(username=u, password=p, qr_code=q)
+        now = datetime.now()
+        dt_string = now.strftime("%A, %B %d, %Y %I:%M %p")
+        print(f'\n{dt_string}')
+        print('Gathering your investment details...')
+        port_head, profit, loss, overall_result, graph_msg = watcher()
         send_email(attachment=True)
         send_whatsapp()
         print(f"Process Completed in {round(float(time.time() - start_time), 2)} seconds")
