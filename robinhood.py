@@ -38,6 +38,10 @@ def watcher():
             continue
         raw_details = rh.get_quote(share_id)
         share_name = raw_details['symbol']
+        prev_close = datetime.strptime(rh.previous_close_date(share_name)[0][0], '%Y-%m-%d').date()
+        yesterday = datetime.today().date() - timedelta(days=1)
+        if prev_close != yesterday:
+            continue
         call = raw_details['instrument']
         r = requests.get(call)
         response = r.text
@@ -174,6 +178,9 @@ if __name__ == '__main__':
     print(f'\n{dt_string}')
     print('Gathering your investment details...')
     port_head, profit, loss, overall_result, graph_msg = watcher()
-    send_email(attachment=True)
-    send_whatsapp()
-    print(f"Process Completed in {round(float(time.time() - start_time), 2)} seconds")
+    if profit == 'Profit:' and loss == 'Loss:':
+        print('The markets are closed today.')
+    else:
+        send_email(attachment=True)
+        send_whatsapp()
+        print(f"Process Completed in {round(float(time.time() - start_time), 2)} seconds")
