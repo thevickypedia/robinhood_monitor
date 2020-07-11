@@ -1,1 +1,6 @@
 pyrh
+pandas
+twilio
+requests
+boto3
+lxml
