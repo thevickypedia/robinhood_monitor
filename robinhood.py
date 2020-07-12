@@ -111,7 +111,7 @@ def watcher():
     port_msg += f'The below values will differ from overall profit/loss if shares were purchased ' \
                 f'with different price values.\nTotal Profit: ${gained}\nTotal Loss: ${lost}\n'
     net_worth = round(float(rh.equity()), 2)
-    output = f'Total number of stocks purchased: {n}\n'
+    output = f'Total number of stocks purchased: {n}\n\n'
     output += f'Current value of your total investment is: ${net_worth}\n'
     total_buy = round(math.fsum(shares_total), 2)
     output += f'Value of your total investment while purchase is: ${total_buy}\n'
