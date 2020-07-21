@@ -7,18 +7,21 @@
 echo -e '\n**********************************************************************************************'
 echo Stopping Containers
 echo -e '**********************************************************************************************'
+# shellcheck disable=SC2046
 docker stop $(docker ps -a -q)
 
 # deletes all existing docker containers
 echo -e '\n**********************************************************************************************'
 echo Deleting Idle Containers
 echo -e '**********************************************************************************************'
+# shellcheck disable=SC2046
 docker rm $(docker ps -a -q)
 
 # force deletes all existing docker images
 echo -e '\n**********************************************************************************************'
 echo Executing Force Deletion of Docker Images
 echo -e '**********************************************************************************************'
+# shellcheck disable=SC2046
 docker rmi $(docker images -q) -f
 
 # docker images
