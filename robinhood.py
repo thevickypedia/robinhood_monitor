@@ -20,7 +20,7 @@ from lib.emailer import Emailer
 def market_status():
     url = 'https://www.nasdaqtrader.com/trader.aspx?id=Calendar'
     holidays_list = list(reader(url)[0][0])
-    today = date.today().strftime("%B %-d, %Y")
+    today = date.today().strftime("%B %d, %Y")
     if today in holidays_list:
         print(f'{today}: The markets are closed today.')
     else:
@@ -39,12 +39,14 @@ def watcher():
     profit_total = []
     graph_msg = None  # initiates a variable graph_msg as None for looped condition below
     n = 0
+    n_ = 0
     for data in result:
         share_id = str(data['instrument'].split('/')[-2])
         buy = round(float(data['average_buy_price']), 2)
-        shares_count = data['quantity'].split('.')[0]
-        if int(shares_count) != 0:
+        shares_count = int(data['quantity'].split('.')[0])
+        if shares_count != 0:
             n = n + 1
+            n_ = n_ + shares_count
         else:
             continue
         raw_details = rh.get_quote(share_id)
@@ -54,10 +56,10 @@ def watcher():
         response = r.text
         json_load = json.loads(response)
         share_full_name = json_load['simple_name']
-        total = round(int(shares_count) * float(buy), 2)
+        total = round(shares_count * float(buy), 2)
         shares_total.append(total)
         current = round(float(raw_details['last_trade_price']), 2)
-        current_total = round(int(shares_count) * current, 2)
+        current_total = round(shares_count * current, 2)
         difference = round(float(current_total - total), 2)
         if difference < 0:
             loss_output += (
@@ -111,7 +113,8 @@ def watcher():
     port_msg += f'The below values will differ from overall profit/loss if shares were purchased ' \
                 f'with different price values.\nTotal Profit: ${gained}\nTotal Loss: ${lost}\n'
     net_worth = round(float(rh.equity()), 2)
-    output = f'Total number of stocks purchased: {n}\n\n'
+    output = f'Total number of stocks purchased: {n}\n'
+    output += f'Total number of shares owned: {n_}\n\n'
     output += f'Current value of your total investment is: ${net_worth}\n'
     total_buy = round(math.fsum(shares_total), 2)
     output += f'Value of your total investment while purchase is: ${total_buy}\n'
