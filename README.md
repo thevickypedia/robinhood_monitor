@@ -29,7 +29,7 @@ Optional: (If you'd like to receive graphs certain profit or loss):
 * graph_max - Maximum value above which you'd like to generate graphs
 <br><br>
 
-To use [qr_code](https://github.com/thevickypedia/robinhood_monitor/blob/master/robinhood.py#L29) you must enable Two-Factor Authentication. Follow steps:
+To use [qr_code](https://github.com/thevickypedia/robinhood_monitor/blob/master/robinhood.py#L180) you must enable Two-Factor Authentication. Follow steps:
 * Login to your Robinhood Web App.
 * Go to Account -> Settings or click [me](https://robinhood.com/account/settings)
 * Turn on Two-Factor Authentication.
