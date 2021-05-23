@@ -1,6 +1,7 @@
-pyrh
-pandas
-twilio
-requests
-boto3
-lxml
+pyrh==2.0
+pandas==1.2.4
+twilio==6.59.0
+requests==2.25.1
+boto3==1.17.78
+lxml==4.6.3
+matplotlib==3.4.2

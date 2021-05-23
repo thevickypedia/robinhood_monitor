@@ -1,4 +1,4 @@
 .idea
+venv
+# todo: move env vars from Dockerfile and onboard it
 Dockerfile
-trading_calendar.py
-test.py
