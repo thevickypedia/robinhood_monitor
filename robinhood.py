@@ -87,9 +87,9 @@ def watcher():
                     numbers.append(round(float(close_price['close_price']), 2))
                 fig, ax = plt.subplots()
                 if difference > graph_max:
-                    plt.title(f"Stock Price Trend for {share_full_name}\nProfit: ${difference}")
+                    plt.title(f"Stock Price Trend for {share_full_name}\nShares: {shares_count}  Profit: ${difference}")
                 elif difference < graph_min:
-                    plt.title(f"Stock Price Trend for {share_full_name}\nLOSS: ${-difference}")
+                    plt.title(f"Stock Price Trend for {share_full_name}\nShares: {shares_count}  LOSS: ${-difference}")
                 plt.xlabel(f"1 Week trend with 10 minutes interval from {metrics.strftime('%m-%d %H:%M')} to "
                            f"{time_now.strftime('%m-%d %H:%M')}")
                 plt.ylabel('Price in USD')
