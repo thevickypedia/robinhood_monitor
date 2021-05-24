@@ -1,0 +1,10 @@
+.gitignore
+.git
+.DS_Store
+.idea
+.dockerignore
+venv
+README.md
+LICENSE
+docker.sh
+Dockerfile

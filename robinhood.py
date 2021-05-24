@@ -8,6 +8,7 @@ from json import loads
 from math import fsum
 from os import environ, mkdir, path
 from shutil import rmtree
+from sys import exit
 from time import perf_counter
 
 import matplotlib.pyplot as plt
@@ -30,9 +31,9 @@ def market_status():
 
 
 def watcher():
-    global graph_msg
+    global graph_msg, graph_min, graph_max
     rh = Robinhood()
-    rh.login(username=u, password=p, qr_code=q)
+    rh.login(username=rh_user, password=rh_pass, qr_code=rh_qr)
     raw_result = rh.positions()
     result = raw_result['results']
     shares_total = []
@@ -74,7 +75,7 @@ def watcher():
                 f'Total bought: ${total} Current Total: ${current_total}'
                 f'\nGained ${difference}\n')
             profit_total.append(difference)
-        if (graph_min := environ.get('graph_min')) and (graph_max := environ.get('graph_max')):
+        if graph_min and graph_max:
             graph_min = float(graph_min)
             graph_max = float(graph_max)
             if difference > graph_max or difference < -graph_min:
@@ -101,7 +102,7 @@ def watcher():
                 # stores graph_msg only if a graph is generated else graph_msg remains None
                 if not graph_msg:  # used if not to avoid storing the message repeatedly
                     graph_msg = f"Attached are the graphs for stocks which exceeded a profit of " \
-                                f"${environ.get('graph_max')} or deceeded a loss of ${environ.get('graph_min')}"
+                                f"${graph_max} or deceeded a loss of ${graph_min}"
         elif not graph_msg:  # used elif not to avoid storing the message repeatedly
             graph_msg = "Add the env variables for <graph_min> and <graph_max> to include a graph of previous " \
                         "week's trend."
@@ -129,8 +130,8 @@ def watcher():
     else:
         output += f"\nCurrent Spike: ${two_day_diff}"
     if not graph_msg:  # if graph_msg was not set above
-        graph_msg = f"You have not lost more than ${environ.get('graph_min')} or gained more than " \
-                    f"${environ.get('graph_max')} to generate a graph."
+        graph_msg = f"You have not lost more than ${graph_min} or gained more than " \
+                    f"${graph_max} to generate a graph."
 
     return port_msg, profit_output, loss_output, output, graph_msg
 
@@ -142,7 +143,8 @@ def send_email(attachment):
                   "A report on the list shares you have purchased.\n" \
                   "The data is being collected using http://api.robinhood.com/," \
                   f"\nFor more information check README.md in https://github.com/thevickypedia/robinhood_monitor"
-    Emailer(sender=f"Robinhood Monitor <{environ.get('SENDER')}>", recipients=[f"{environ.get('RECIPIENT')}"],
+    Emailer(access_key=access_key, secret_key=secret_key,
+            sender=f"Robinhood Monitor <{sender}>", recipients=[recipient],
             title=f'Investment Summary as of {dt_string}',
             text=f'{overall_result}\n\n{port_head}\n{profit}\n{loss}\n\n{graph_msg}\n\n{footer_text}',
             attachment=attachment)
@@ -152,24 +154,62 @@ def send_email(attachment):
 
 def send_whatsapp():
     print('Sending whats app notification...')
-    Client(environ.get('SID'), environ.get('TOKEN')).messages.create(
+    Client(sid, token).messages.create(
         body=f'{dt_string}\nRobinhood Report\n{overall_result}\n\nCheck your email for summary',
-        from_=f"whatsapp:{environ.get('SEND')}",
-        to=f"whatsapp:{environ.get('RECEIVE')}"
+        from_=f"whatsapp:{send}",
+        to=f"whatsapp:{receive}"
     )
 
 
 if __name__ == '__main__':
-    u, p, q = None, None, None
     if market_status():
-        if (u := environ.get('user')) and (p := environ.get('pass')) and (q := environ.get('qr')):
-            dt_string = datetime.now().strftime("%A, %B %d, %Y %I:%M %p")
-            print(f'\n{dt_string}')
-            print('Gathering your investment details...')
-            port_head, profit, loss, overall_result, graph_msg = watcher()
-            send_email(attachment=True)
-            send_whatsapp()
-            print(f"Process Completed in {round(float(perf_counter()), 2)} seconds")
+        if environ.get('DOCKER'):
+            print('Using json file for secrets')
+            from json import load
+
+            json_file = load(open('params.json'))
+            rh_user = json_file.get('user')
+            rh_pass = json_file.get('pass')
+            rh_qr = json_file.get('qr')
+            sid = json_file.get('SID')
+            token = json_file.get('TOKEN')
+            send = json_file.get('SEND')
+            receive = json_file.get('RECEIVE')
+            sender = json_file.get('SENDER')
+            access_key = json_file.get('ACCESS_KEY')
+            secret_key = json_file.get('SECRET_KEY')
+            current_time = datetime.now() - timedelta(hours=5)
         else:
-            print("\nCheck your local environment variables. It should be set as:\n"
-                  "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'")
+            rh_user = environ.get('user')
+            rh_pass = environ.get('pass')
+            rh_qr = environ.get('qr')
+            sid = environ.get('SID')
+            token = environ.get('TOKEN')
+            send = environ.get('SEND')
+            receive = environ.get('RECEIVE')
+            sender = environ.get('SENDER')
+            access_key = environ.get('ACCESS_KEY')
+            secret_key = environ.get('SECRET_KEY')
+            current_time = datetime.now()
+
+        recipient = rh_user
+
+        # below are optional to get graphs for stocks that have profited more than graph_max and loss below graph_min
+        graph_min = environ.get('graph_min')
+        graph_max = environ.get('graph_max')
+
+        env_vars = [rh_user, rh_pass, rh_qr, sid, token, send, receive, sender, recipient]
+
+        if any(env_var is None for env_var in env_vars):
+            exit("Check your environment variables. It should be set as:\n"
+                 "'user=<login_email>'\n'pass=<password>'\n'qr=<qr_code>'\n"
+                 "'SID=<twilio_sid>'\n'TOKEN=<twilio_token>'\n'SEND=<twilio_sender>'\n"
+                 "'RECEIVE=<phone_number>'\n'SENDER=<emailID>'")
+
+        dt_string = current_time.strftime("%A, %B %d, %Y %I:%M %p")
+        print(f'{dt_string}')
+        print('Gathering your investment details...')
+        port_head, profit, loss, overall_result, graph_msg = watcher()
+        send_email(attachment=True)
+        send_whatsapp()
+        print(f"Process Completed in {round(float(perf_counter()), 2)} seconds")

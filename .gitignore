@@ -1,4 +1,5 @@
 .idea
 venv
-# todo: move env vars from Dockerfile and onboard it
-Dockerfile
+
+# dictionary of env variables stored as a json dictionary to get the secrets during docker run
+params.json

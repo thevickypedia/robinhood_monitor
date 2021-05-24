@@ -6,20 +6,19 @@
  **/"""
 
 
-import os
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 
 import boto3
 
 
 class Emailer:
-    def __init__(self, sender: str, recipients: list, title: str, text: str, attachment: list = None):
+    def __init__(self, access_key: str, secret_key: str, sender: str, recipients: list, title: str, text: str,
+                 attachment: list = None):
         boto3_ses_client = boto3.Session(
-            # vig
-            aws_access_key_id=os.getenv('ACCESS_KEY'),
-            aws_secret_access_key=os.getenv('SECRET_KEY'),
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
         ).client('ses', region_name='us-west-2')
 
         self.send_mail(boto3_ses_client, sender, recipients, title, text, attachment)
